@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Your Application</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="/js/formValidation.js" defer></script>
+</head>
+<body class="font-roboto">
+    <div class="container mx-auto mt-10">
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <h1 class="text-3xl font-semibold mb-6 text-center">Upload Your Source Code</h1>
+            <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+                <!-- GitHub Link Input -->
+                <div class="mb-4">
+                    <label for="githubRepo" class="block text-gray-700 text-sm font-bold mb-2">GitHub Repository Link</label>
+                    <input type="url" id="githubRepo" name="githubRepo" placeholder="https://github.com/my-repo" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                </div>
+                <!-- File Upload Input -->
+                <div class="mb-4">
+                    <label for="file" class="block text-gray-700 text-sm font-bold mb-2">Or Upload Folder</label>
+                    <input type="file" id="file" name="file" class="input-file" webkitdirectory multiple hidden>
+                    <label for="file" class="font-semibold custom-file-upload">Select Folder</label>
+                </div>
+                <!-- Programming Language Selection -->
+                <div class="mb-4 prog-lang">
+                    <label for="prog-language" class="block text-gray-700 text-sm font-bold mb-2">Select Programming Language</label>
+                    <select name="prog-language" id="prog-language" class="shadow border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="python">Python</option>
+                        <option value="java-spring">Java Spring</option>
+                        <option value="node-js">Node JS</option>
+                        <option value="php-laravel">Php Laravel</option>
+                    </select>
+                </div>
+                <!-- Requirements.txt Confirmation -->
+                <div class="mb-4">
+                    <input type="checkbox" id="requirements-check" name="requirements-check" value="confirmed">
+                    <label for="requirements-check" class="text-gray-500 text-base font-semibold">I confirm the presence of a requirements.txt or equivalent in my source code .</label>
+                </div>
+                <button type="submit" class="submit-btn text-white font-semibold py-2 px-4 rounded ">Submit</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+stages:
+  - Code Scanning
+  - building 
+  - Container Security
+  - pushing
+
+#Code Scanning contain 3 jobs that can be executed at the same time , these jobs are : Secret scanning , Code Quality , SAST .
+#Container Security contains 2 jobs : container scanning , image signing .
+
+
+variables:
+  DOCKER_IMAGE_TAG: DevSecOps-uploaded-repo:${CI_COMMIT_REF_SLUG}
+
+
+before_script:
+  - echo "Starting Pipeline for Project"
+
+Secret Scanning: 
+  stage: Code Scanning
+  script:
+    - >
+      docker run --rm -v $CI_PROJECT_DIR:/data trufflesecurity/trufflehog:latest trufflehog /data --json --max_depth=5 > trufflehog_report.json
+    - >
+      if [ -s trufflehog_report.json ]; then
+        echo "WARNING: Secrets detected. Review trufflehog_report.json for details."
+        cat trufflehog_report.json
+      else
+        echo "No secrets detected."
+      fi
+  artifacts:
+    when: always
+    paths:
+      - trufflehog_report.json
+  only:
+    - branches
+
+
+Code Quality: 
+  stage: Code Scanning
+#Code Scanning is still not finished
+
+build:
+  stage: building
+  script:
+    - docker build -t $CI_REGISTRY/$DOCKER_IMAGE_TAG .
+  only:
+    - branches
+
+push:
+  stage: pushing
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY/$DOCKER_IMAGE_TAG
+  only:
+    - master
