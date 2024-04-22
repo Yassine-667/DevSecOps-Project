@@ -15,6 +15,7 @@ variables:
 before_script:
   - echo "Starting Pipeline for Project"
 
+#Before running the Scans , we have to make sure that docker is running on our runner machine , ( mazal maderthach )
 Secret Scanning: 
   stage: Code Scanning
   script:
@@ -46,10 +47,28 @@ build:
   only:
     - branches
 
-push:
+Image Scanning:
+  stage: Container Security
+  script:
+    - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format json --output trivy_report.json --no-fail $CI_REGISTRY/$DOCKER_IMAGE_TAG
+    - echo "Trivy vulnerability scan completed. Check trivy_report.json for details."
+  artifacts:
+    when: always
+    paths:
+      - trivy_report.json
+  only:
+    - branches
+
+
+signing & pushing: 
   stage: pushing
   script:
+    - export DOCKER_CONTENT_TRUST=1
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE="your_passphrase_here"
+    #idealement had l passphrase khassha tkon stored as a protected variable f gitlab settings 
     - docker push $CI_REGISTRY/$DOCKER_IMAGE_TAG
   only:
     - master
+
+    
