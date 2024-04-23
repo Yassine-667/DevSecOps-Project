@@ -22,8 +22,19 @@ app.get('/', (req, res) => {
 });
 
 app.post('/upload', (req, res) => {
-    const { githubRepo, 'prog-language': progLanguage, 'requirements-check': requirementsCheck } = req.body;
-
+    const { githubRepo, 'prog-language': progLanguage, 'requirements-check': requirementsCheck, 'Dockerfile':Dockerfile } = req.body;
+    const dataToSave = {
+        progLanguage: progLanguage,
+        requirementsCheck: requirementsCheck,
+        Dockerfile: Dockerfile
+    };
+    fs.writeFile('output.json', JSON.stringify(dataToSave), (err) => {
+        if(err) {
+            console.error('Error writing to file', err);
+        } else {
+            console.log('Data saved successfully');
+        }
+    });
     // Validate input: Either GitHub URL or file(s) should be provided, but not both
     if (githubRepo && req.files && Object.keys(req.files).length > 0) {
         return res.status(400).send('Please provide either a GitHub repository link or file(s) to upload, not both.');
@@ -41,7 +52,7 @@ app.post('/upload', (req, res) => {
             }
             console.log(`stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
-            return res.send(`Repository cloned successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'}.`);
+            return res.send(`Repository cloned successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'} . Existant Dockerfile: ${Dockerfile}`);
         });
     } 
     // Folder/File upload
@@ -67,7 +78,7 @@ app.post('/upload', (req, res) => {
         else {
             files.forEach(file => processFile(file));
         }
-        return res.send(`Files/Folders uploaded successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'}.`);
+        return res.send(`Files/Folders uploaded successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'}. Existant Dockerfile: ${Dockerfile}`);
     } 
     // No input provided
     else {

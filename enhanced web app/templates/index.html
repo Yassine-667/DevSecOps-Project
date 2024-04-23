@@ -14,7 +14,7 @@
         <div>
             <img src="/static/logos/logo-blue.png" width="270" height="320" class="mx-auto mt-10 ">
         </div>
-        <div class="bg-white p-8 rounded-lg shadow-lg">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-3xl mx-auto">
             <h1 class="text-3xl font-semibold mb-6 text-center">Upload Your Source Code</h1>
             <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
                 <!-- GitHub Link Input -->
@@ -38,9 +38,22 @@
                         <option value="php-laravel">Php Laravel</option>
                     </select>
                 </div>
+                <div class="dockerfile-div mb-4">
+                    <p class="block text-gray-700 text-sm font-bold mb-2">Does your Repository contain a Dockerfile ? </p>
+                    <div class="flex items-center justify-start space-x-12">
+                        <div class="flex items-center space-x-2">
+                            <input type="radio" id="yes" name="Dockerfile" value="yes" class="radio radio-primary">
+                            <label for="yes" class="text-gray-800 cursor-pointer">Yes</label>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="radio" id="no" name="Dockerfile" value="no" class="radio radio-primary">
+                            <label for="no" class="text-gray-800 cursor-pointer">No</label>
+                        </div>
+                    </div>
+                </div>
                 <!-- Requirements.txt Confirmation -->
                 <div class="mb-4">
-                    <input type="checkbox" id="requirements-check" name="requirements-check" value="confirmed">
+                    <input type="checkbox" id="requirements-check" name="requirements-check" value="yes">
                     <label for="requirements-check" class="text-gray-500 text-base font-semibold">I confirm the presence of a requirements.txt or equivalent in my source code .</label>
                 </div>
                 <button type="submit" class="submit-btn text-white font-semibold py-2 px-4 rounded ">Submit</button>

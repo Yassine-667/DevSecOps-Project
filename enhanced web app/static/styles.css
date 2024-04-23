@@ -92,3 +92,12 @@ button:hover {
 .prog-lang{
     margin-top: 2.5%;
 }
+
+.dockerfile-div{
+    padding-bottom: 0.5%;
+}
+
+input[type="radio"] {
+    accent-color: #2D9596; 
+}
+
