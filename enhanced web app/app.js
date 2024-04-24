@@ -24,6 +24,7 @@ app.get('/', (req, res) => {
 app.post('/upload', (req, res) => {
     const { githubRepo, 'prog-language': progLanguage, 'requirements-check': requirementsCheck, 'Dockerfile':Dockerfile } = req.body;
     const dataToSave = {
+        githubRepo: githubRepo,
         progLanguage: progLanguage,
         requirementsCheck: requirementsCheck,
         Dockerfile: Dockerfile
@@ -52,6 +53,7 @@ app.post('/upload', (req, res) => {
             }
             console.log(`stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
+            console.log('Repository cloned successfully')
             return res.send(`Repository cloned successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'} . Existant Dockerfile: ${Dockerfile}`);
         });
     } 
