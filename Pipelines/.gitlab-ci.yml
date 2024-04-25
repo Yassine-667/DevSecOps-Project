@@ -1,8 +1,17 @@
 stages:
+  - lint
   - Code Scanning
+  - sonarscanner
   - building 
   - Container Security
   - pushing
+  - launch_sidecar
+  - scan_container
+  - nikto
+  - owasp_zap
+
+
+# We need anchore and sonarcube server and in the future defect dojo server.
 
 #Code Scanning contain 3 jobs that can be executed at the same time , these jobs are : Secret scanning , Code Quality , SAST .
 #Container Security contains 2 jobs : container scanning , image signing .
@@ -10,10 +19,18 @@ stages:
 
 variables:
   DOCKER_IMAGE_TAG: DevSecOps-uploaded-repo:${CI_COMMIT_REF_SLUG}
+  DOCKER_IMAGE: "Registry IP Location For Project Images"
+  TOOLS_IMAGE: "Registry IP Location For Tools Images"
+  SONAR_KEY: ""
 
 
 before_script:
   - echo "Starting Pipeline for Project"
+
+lint:
+  image: "docker.io/hadolint/hadolint:v1.18.0"
+  script:
+    - hadolint Dockerfile > hadolint-results.txt
 
 #Before running the Scans , we have to make sure that docker is running on our runner machine , ( mazal maderthach )
 Secret Scanning: 
@@ -36,16 +53,27 @@ Secret Scanning:
     - branches
 
 
-Code Quality: 
-  stage: Code Scanning
-#Code Scanning is still not finished
-
-build:
-  stage: building
+sonarscanner:
+  image: ${TOOLS_IMAGE}
   script:
-    - docker build -t $CI_REGISTRY/$DOCKER_IMAGE_TAG .
-  only:
-    - branches
+    - npm install -D typescript
+    - sonar-scanner \
+        -Dsonar.buildString=${CI_COMMIT_REF_NAME}-${CI_PIPELINE_ID} \
+        -Dsonar.projectKey=${SONAR_KEY} \
+        -Dsonar.projectVersion=${CI_PIPELINE_ID} \
+        -Dsonar.sources=${CI_PROJECT_DIR}
+
+  build_image:
+  script:
+    - |
+      tag=$(git tag --contains ${CI_COMMIT_SHA} | awk '{print $1}')
+      if [[ -z "$tag" ]]; then
+        tag="${CI_COMMIT_REF_NAME}"
+        if [[ "${CI_COMMIT_REF_NAME}" == "master" ]]; then
+          tag="latest"
+        fi
+      fi
+      docker build -t "${DOCKER_IMAGE}:${tag}" .
 
 Image Scanning:
   stage: Container Security
@@ -70,5 +98,36 @@ signing & pushing:
     - docker push $CI_REGISTRY/$DOCKER_IMAGE_TAG
   only:
     - master
+
+launch_sidecar:
+  script:
+    - docker run --detach --network lab --name ${CI_JOB_NAME}-${CI_PIPELINE_ID} --rm ${DOCKER_IMAGE}:${tag}
+
+scan_container:
+  image: ${TOOLS_IMAGE}
+  script:
+    - anchore-cli system status
+    - anchore-cli image add ${DOCKER_IMAGE}:${tag}
+    - anchore-cli image wait ${DOCKER_IMAGE}:${tag}
+    - anchore-cli image vuln ${DOCKER_IMAGE}:${tag} all | tee anchore-results.txt
+    - anchore-cli evaluate check ${DOCKER_IMAGE}:${tag} --detail >> anchore-results.txt
+
+nikto:
+  image: ${TOOLS_IMAGE}
+  script:
+    - mkdir -p reports
+    - curl --max-time 120 --retry 60 --retry-connrefused --retry-delay 5 --fail --silent http://${CI_JOB_NAME}-${CI_PIPELINE_ID}:3000 || exit 1
+    - nikto.pl -ask no -nointeractive -output reports/nikto.html -Plugins '@@ALL;-sitefiles' -Tuning x7 -host http://${CI_JOB_NAME}-${CI_PIPELINE_ID}:3000 > nikto-results.txt
+
+owasp_zap:
+  image: "owasp/zap2docker-weekly"
+  script:
+    - mkdir -p reports
+    - curl --max-time 120 --retry 60 --retry-connrefused --retry-delay 5 --fail --silent http://${CI_JOB_NAME}-${CI_PIPELINE_ID}:3000 || exit 1
+    - zap-baseline.py -m 5 -T 5 -I -r reports/zapreport.html -t "http://${CI_JOB_NAME}-${CI_PIPELINE_ID}:3000"
+
+after_script:
+  - docker stop ${CI_JOB_NAME}-${CI_PIPELINE_ID}
+  - mv *-results.txt reports/
 
     
