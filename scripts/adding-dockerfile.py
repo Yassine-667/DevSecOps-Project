@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 #setting-up the json and the script paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(script_dir, '..', 'enhanced web app', 'output.json')
+json_path = os.path.join(script_dir, '..', 'web portal', 'output.json')
 
 def assign_dockerfile(lang):
     lang_str=str(lang)
@@ -39,9 +39,9 @@ def extract_repo_name(url):
     return repo_name
 
 if (data['githubRepo']):
-    source_dir=os.path.join(script_dir, '..', 'enhanced web app', 'uploads',extract_repo_name(data['githubRepo']))
+    source_dir=os.path.join(script_dir, '..', 'web portal', 'uploads',extract_repo_name(data['githubRepo']))
 else:
-    source_dir=os.path.join(script_dir, '..', 'enhanced web app', 'uploads')
+    source_dir=os.path.join(script_dir, '..', 'web portal', 'uploads')
 
 destination_dir=os.path.join(script_dir, '..', 'app-ready-to-test')
 
