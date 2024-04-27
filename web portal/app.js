@@ -56,6 +56,17 @@ app.get('/login', (req, res) => {
 
 app.get('/logout', (req, res) => {
     res.clearCookie('auth');
+    const script_directory2=path.join(__dirname, '..', 'scripts', 'cleanup.py');
+    function executePythonScript() {
+        exec(`py "${script_directory2}"`, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+            }
+            console.log(`stdout: ${stdout}`);
+            console.error(`stderr: ${stderr}`);
+        });
+    }
+    executePythonScript();
     res.redirect('/login');
 });
 
@@ -86,72 +97,95 @@ app.post('/login', async (req, res) => {
 
 
 app.post('/uploadfile', (req, res) => {
-    const { githubRepo, 'prog-language': progLanguage, 'requirements-check': requirementsCheck, 'Dockerfile':Dockerfile } = req.body;
+    const { githubRepo, 'prog-language': progLanguage, 'requirements-check': requirementsCheck, 'Dockerfile': Dockerfile } = req.body;
     const dataToSave = {
         githubRepo: githubRepo,
         progLanguage: progLanguage,
         requirementsCheck: requirementsCheck,
         Dockerfile: Dockerfile
     };
+    const script_directory=path.join(__dirname, '..', 'scripts', 'main-script.py');
     fs.writeFile('output.json', JSON.stringify(dataToSave), (err) => {
-        if(err) {
+        if (err) {
             console.error('Error writing to file', err);
+            return res.status(500).send('Error saving data.');
         } else {
             console.log('Data saved successfully');
+
+            // Continue with further processing after file write
+            processUpload();
         }
     });
-    // Validate input: Either GitHub URL or file(s) should be provided, but not both
-    if (githubRepo && req.files && Object.keys(req.files).length > 0) {
-        return res.status(400).send('Please provide either a GitHub repository link or file(s) to upload, not both.');
+
+    function processUpload() {
+        if (githubRepo && req.files && Object.keys(req.files).length > 0) {
+            return res.status(400).send('Please provide either a GitHub repository link or file(s) to upload, not both.');
+        }
+    
+        if (githubRepo) {
+            const destinationPath = path.join(UPLOAD_FOLDER, new URL(githubRepo).pathname.split('/').pop());
+    
+            exec(`git clone ${githubRepo} ${destinationPath}`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`exec error: ${error}`);
+                    return res.status(500).send(`Failed to clone the repository: ${error.message}`);
+                }
+                console.log(`stdout: ${stdout}`);
+                console.error(`stderr: ${stderr}`);
+                console.log('Repository cloned successfully');
+    
+                executePythonScript(); // Execute Python script here
+            });
+        } else if (req.files && Object.keys(req.files).length > 0) {
+            const files = req.files.file;
+            const processFile = (file, callback) => {
+                const filePath = path.join(UPLOAD_FOLDER, file.name.trim());
+                if (fs.existsSync(filePath)) {
+                    return res.status(400).send('File already exists: ' + file.name.trim());
+                }
+                file.mv(filePath, err => {
+                    if (err) {
+                        console.error('Error:', err);
+                        return res.status(500).send('Error uploading file/folder.');
+                    }
+                    callback();
+                });
+            };
+    
+            const processFiles = () => {
+                if (!Array.isArray(files)) {
+                    processFile(files, executePythonScript);
+                } else {
+                    let uploadsCompleted = 0;
+                    files.forEach(file => {
+                        processFile(file, () => {
+                            uploadsCompleted++;
+                            if (uploadsCompleted === files.length) {
+                                executePythonScript(); // Execute Python script after all files are uploaded
+                            }
+                        });
+                    });
+                }
+            };
+
+            processFiles();
+        } else {
+            return res.status(400).send('No files were uploaded and no GitHub repository link was provided.');
+        }
     }
-
-    // GitHub URL submission
-    if (githubRepo) {
-        const destinationPath = path.join(UPLOAD_FOLDER, new URL(githubRepo).pathname.split('/').pop());
-
-        // Use exec to clone the repository
-        exec(`git clone ${githubRepo} ${destinationPath}`, (error, stdout, stderr) => {
+    
+    function executePythonScript() {
+        exec(`py "${script_directory}"`, (error, stdout, stderr) => {
             if (error) {
                 console.error(`exec error: ${error}`);
-                return res.status(500).send(`Failed to clone the repository: ${error.message}`);
+                return res.status(500).send(`Failed to execute Python script: ${error.message}`);
             }
             console.log(`stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
-            console.log('Repository cloned successfully')
-            return res.send(`Repository cloned successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'} . Existant Dockerfile: ${Dockerfile}`);
+            res.send('Python script executed successfully.');
         });
-    } 
-    // Folder/File upload
-    else if (req.files && Object.keys(req.files).length > 0) {
-        const files = req.files.file;
-        const processFile = (file) => {
-            const filePath = path.join(UPLOAD_FOLDER, file.name.trim());
-            if (fs.existsSync(filePath)) {
-                return res.status(400).send('File already exists: ' + file.name.trim());
-            }
-            file.mv(filePath, err => {
-                if (err) {
-                    console.error('Error:', err);
-                    return res.status(500).send('Error uploading file/folder.');
-                }
-            });
-        };
-        // Handle single file upload scenario
-        if (!Array.isArray(files)) {
-            processFile(files);
-        } 
-        // Handle multiple files upload scenario
-        else {
-            files.forEach(file => processFile(file));
-        }
-        return res.send(`Files/Folders uploaded successfully. Programming Language: ${progLanguage}. Requirements.txt confirmed: ${requirementsCheck ? 'Yes' : 'No'}. Existant Dockerfile: ${Dockerfile}`);
-    } 
-    // No input provided
-    else {
-        return res.status(400).send('No files were uploaded and no GitHub repository link was provided.');
     }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
