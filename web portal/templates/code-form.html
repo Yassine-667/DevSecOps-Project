@@ -8,9 +8,27 @@
     <link rel="stylesheet" type="text/css" href="styles.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="/js/formValidation.js" defer></script>
+    <script src="/js/togglebar.js" defer></script>
+    <script src="/js/EmailDisplay.js" defer></script>
 </head>
 <body class="font-roboto">
     <div class="container mx-auto mt-10">
+                <!-- Sidebar Toggle Button -->
+                <div id="toggle-btn" class="toggle-btn" style="position: fixed; top: 20px; right: 20px; z-index: 1001;" onclick="toggleSidebar()">
+                    <div class="bar1"></div>
+                    <div class="bar2"></div>
+                    <div class="bar3"></div>
+                </div>
+
+                <!-- Sidebar -->
+                <div id="sidebar" class="sidebar">
+                    <h2 class="text-white font-bold text-center">Connected As: </h2>
+                    <p class="text-white font-semibold">user@example.com</p> <!-- Dynamic data should replace this placeholder -->
+                    <button class="text-white font-semibold py-2 px-4 rounded">About Us</button>
+                    <form action="/logout" method="post">
+                        <button type="submit" class="text-white font-semibold py-2 px-4 rounded">Logout</button>
+                    </form>
+                </div>
         <div>
             <img src="/static/logos/logo-blue.png" width="270" height="320" class="mx-auto mt-10 ">
         </div>
