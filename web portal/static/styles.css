@@ -101,3 +101,104 @@ input[type="radio"] {
     accent-color: #2D9596; 
 }
 
+    /* Sidebar Styles */
+    .sidebar {
+        position: fixed;
+        width: 350px;
+        height: 100%;
+        right: -350px;
+        top: 0;
+        background-color: #2A345A;
+        opacity: 1; /* Green background with 70% opacity */
+        transition: right 0.3s ease-in-out;
+        padding: 20px;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1); /* Softer shadow */
+        z-index: 1000;
+    }
+    
+    .sidebar.active {
+        right: 0;
+    }
+    
+    .sidebar h2 {
+        margin-top: 25%;
+        margin-bottom: 20px;
+        font-size: 22px;
+    }
+    
+    .sidebar p {
+        margin-bottom: 30px;
+
+    }
+    
+    .sidebar button {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px; /* Spacing between buttons */
+        border: none;
+        border-radius: 5px;
+        background-color: #2D9596; /* Blue color for buttons */
+        color: #ffffff; /* White text for readability */
+        text-align: center; /* Align text to the left */
+    }
+    
+    .sidebar button:hover {
+        background-color: #135D66; /* Slightly lighter blue on hover */
+        cursor: pointer;
+    }
+
+    .sidebar form button {
+        background-color: #2D9596; /* Red color for the logout button */
+    }
+
+    .sidebar form button:hover {
+        background-color: #135D66; /* Lighter red on hover */
+    }
+
+    /* Toggle Button Styles */
+    .toggle-btn button {
+        background-color: #2D9596; /* Blue color to match the buttons */
+        /* Other styles are the same as in the sidebar buttons */
+    }
+/* Toggle Button Bars */
+.bar1, .bar2, .bar3 {
+    width: 35px; /* Length of the bar */
+    height: 5px; /* Thickness of the bar */
+    background-color: white;
+    margin: 6px 0;
+    transition: 0.4s;
+}
+
+/* Rotate first bar */
+.change .bar1 {
+    -webkit-transform: rotate(-45deg) translate(-9px, 6px);
+    transform: rotate(-45deg) translate(-9px, 6px);
+}
+
+/* Fade out the second bar */
+.change .bar2 {
+    opacity: 0;
+}
+
+/* Rotate third bar */
+.change .bar3 {
+    -webkit-transform: rotate(45deg) translate(-8px, -8px);
+    transform: rotate(45deg) translate(-8px, -8px);
+}
+
+
+
+.box-box {
+    background-color: #2D9596;
+    color: white;
+}
+.box-box a {
+    color: white;
+    background-color: #ffffff33;
+    transition: background-color 0.3s;
+}
+.box-box a:hover {
+    background-color: #ffffff77;
+}
+

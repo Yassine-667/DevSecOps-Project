@@ -25,7 +25,8 @@ if (!fs.existsSync(UPLOAD_FOLDER)) {
     fs.mkdirSync(UPLOAD_FOLDER);
 }
 
-
+app.use(express.static(path.join(__dirname, 'js')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use(express.static(path.join(__dirname, 'static')));
 app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use(express.urlencoded({ extended: true }));
@@ -54,7 +55,7 @@ app.get('/login', (req, res) => {
     }
 });
 
-app.get('/logout', (req, res) => {
+app.post('/logout', (req, res) => {
     res.clearCookie('auth');
     const script_directory2=path.join(__dirname, '..', 'scripts', 'cleanup.py');
     function executePythonScript() {
@@ -78,6 +79,12 @@ app.get('/',(req, res) => {
     } 
 });
 
+
+app.get('/results',(req, res) => {
+    res.sendFile(path.join(__dirname, 'templates', 'results.html'));
+});
+
+
 app.post('/login', async (req, res) => { 
     const { email, password } = req.body;
     const authRequest = {
@@ -89,6 +96,7 @@ app.post('/login', async (req, res) => {
  try {
         const authResult = await pca.acquireTokenByUsernamePassword(authRequest);
         res.cookie('auth', 'authenticated', { httpOnly: true, signed: true }); // Set a signed cookie
+        res.cookie('user_email', email, { signed: true });
         res.redirect('/uploadfile');
     } catch (error) {
         res.send(`Authentication failed: ${error.message}`);
@@ -114,6 +122,10 @@ app.post('/uploadfile', (req, res) => {
 
             // Continue with further processing after file write
             processUpload();
+            setTimeout(() => {
+                res.redirect('/results');
+            }, 6000);
+
         }
     });
 
@@ -187,7 +199,10 @@ app.post('/uploadfile', (req, res) => {
     }
 });
 
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+

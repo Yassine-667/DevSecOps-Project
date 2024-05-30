@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="/js/formValidation.js" defer></script>
+    <script src="/js/togglebar.js" defer></script>
+    <script src="/js/EmailDisplay.js" defer></script>
+</head>
+
+<body class="font-roboto">
+    <div class="mx-auto mt-10">
+        <!-- Sidebar Toggle Button -->
+        <div id="toggle-btn" class="toggle-btn" style="position: fixed; top: 20px; right: 20px; z-index: 1001;" onclick="toggleSidebar()">
+            <div class="bar1"></div>
+            <div class="bar2"></div>
+            <div class="bar3"></div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar">
+            <h2 class="text-white font-bold text-center">Connected As: </h2>
+            <p class="text-white font-semibold">user@example.com</p> <!-- Dynamic data should replace this placeholder -->
+            <button id="redirectButton" class="text-white font-semibold py-2 px-4 rounded">About Us</button>
+            <form action="/logout" method="post">
+                <button type="submit" class="text-white font-semibold py-2 px-4 rounded">Logout</button>
+            </form>
+        </div>
+        <div>
+            <img src="/static/logos/logo-blue.png" width="270" height="320" class="mx-auto mt-10">
+        </div>
+        <div class="max-w-xl mx-auto mt-10">
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6 flex flex-col items-center">
+                <img src="/static/logos/sonar sonar logo.png" alt="SonarCube Logo" width="170" height="170" class="mb-4">
+                <a href="https://www.youtube.com/watch?v=CoDzP4HoGS0&ab_channel=SkyrockFM" target="_blank" class="result-btn submit-btn text-white font-semibold py-2 px-10 rounded">
+                    Check Test Results : SAST
+                </a>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6 flex flex-col items-center">
+                <img src="/static/logos/defect logo.png" alt="DefectDojo Logo" width="120" height="120" class="mb-4">
+                <a href="https://www.youtube.com/watch?v=CoDzP4HoGS0&ab_channel=SkyrockFM" target="_blank" class="result-btn submit-btn text-white font-semibold py-2 px-10 rounded">
+                    Check Test Results : Artifacts
+                </a>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6 flex flex-col items-center">
+                <img src="/static/logos/grafana logo.png" alt="Grafana Logo" width="80" height="80" class="mb-4">
+                <a href="https://www.youtube.com/watch?v=CoDzP4HoGS0&ab_channel=SkyrockFM" target="_blank" class="result-btn submit-btn text-white font-semibold py-2 px-10 rounded">
+                    Check Test Results : Performance 
+                </a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('redirectButton').addEventListener('click', function() {
+            window.open('https://www.inetum.com/fr/maroc', '_blank');
+        });
+    </script>
+</body>
+</html>

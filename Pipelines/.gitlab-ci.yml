@@ -1,21 +1,14 @@
 stages:
-  - lint
+  - pre_scan
   - Code Scanning
-  - sonarscanner
   - building 
-  - Container Security
+  - image Security
   - pushing
+  - container security
   - launch_sidecar
   - scan_container
   - nikto
   - owasp_zap
-
-
-# We need anchore and sonarcube server and in the future defect dojo server.
-
-#Code Scanning contain 3 jobs that can be executed at the same time , these jobs are : Secret scanning , Code Quality , SAST .
-#Container Security contains 2 jobs : container scanning , image signing .
-
 
 variables:
   DOCKER_IMAGE_TAG: DevSecOps-uploaded-repo:${CI_COMMIT_REF_SLUG}
@@ -23,16 +16,25 @@ variables:
   TOOLS_IMAGE: "Registry IP Location For Tools Images"
   SONAR_KEY: ""
 
-
-before_script:
-  - echo "Starting Pipeline for Project"
+check_docker:
+  stage: pre_scan
+  script:
+    - docker info || (echo "Docker is not running or not installed"; exit 1)
+  tags:
+    - docker-local
 
 lint:
+  stage: Code Scanning
   image: "docker.io/hadolint/hadolint:v1.18.0"
   script:
     - hadolint Dockerfile > hadolint-results.txt
+  artifacts:
+    paths:
+      - hadolint-results.txt
+    expose_as: 'Hadolint Results'
+  tags:
+    - docker-local
 
-#Before running the Scans , we have to make sure that docker is running on our runner machine , ( mazal maderthach )
 Secret Scanning: 
   stage: Code Scanning
   script:
@@ -49,21 +51,15 @@ Secret Scanning:
     when: always
     paths:
       - trufflehog_report.json
+    expose_as: 'Trufflehog Results'
   only:
     - branches
+  tags:
+    - docker-local
 
 
-sonarscanner:
-  image: ${TOOLS_IMAGE}
-  script:
-    - npm install -D typescript
-    - sonar-scanner \
-        -Dsonar.buildString=${CI_COMMIT_REF_NAME}-${CI_PIPELINE_ID} \
-        -Dsonar.projectKey=${SONAR_KEY} \
-        -Dsonar.projectVersion=${CI_PIPELINE_ID} \
-        -Dsonar.sources=${CI_PROJECT_DIR}
-
-  build_image:
+build_image:
+  stage: building
   script:
     - |
       tag=$(git tag --contains ${CI_COMMIT_SHA} | awk '{print $1}')
@@ -76,7 +72,7 @@ sonarscanner:
       docker build -t "${DOCKER_IMAGE}:${tag}" .
 
 Image Scanning:
-  stage: Container Security
+  stage: image Security
   script:
     - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format json --output trivy_report.json --no-fail $CI_REGISTRY/$DOCKER_IMAGE_TAG
     - echo "Trivy vulnerability scan completed. Check trivy_report.json for details."
@@ -87,23 +83,23 @@ Image Scanning:
   only:
     - branches
 
-
-signing & pushing: 
+signing & pushing:
   stage: pushing
   script:
     - export DOCKER_CONTENT_TRUST=1
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE="your_passphrase_here"
-    #idealement had l passphrase khassha tkon stored as a protected variable f gitlab settings 
     - docker push $CI_REGISTRY/$DOCKER_IMAGE_TAG
   only:
     - master
 
 launch_sidecar:
+  stage: container security
   script:
     - docker run --detach --network lab --name ${CI_JOB_NAME}-${CI_PIPELINE_ID} --rm ${DOCKER_IMAGE}:${tag}
 
 scan_container:
+  stage: container security
   image: ${TOOLS_IMAGE}
   script:
     - anchore-cli system status
@@ -113,6 +109,7 @@ scan_container:
     - anchore-cli evaluate check ${DOCKER_IMAGE}:${tag} --detail >> anchore-results.txt
 
 nikto:
+  stage: container security
   image: ${TOOLS_IMAGE}
   script:
     - mkdir -p reports
@@ -120,6 +117,7 @@ nikto:
     - nikto.pl -ask no -nointeractive -output reports/nikto.html -Plugins '@@ALL;-sitefiles' -Tuning x7 -host http://${CI_JOB_NAME}-${CI_PIPELINE_ID}:3000 > nikto-results.txt
 
 owasp_zap:
+  stage: container security
   image: "owasp/zap2docker-weekly"
   script:
     - mkdir -p reports
@@ -127,7 +125,4 @@ owasp_zap:
     - zap-baseline.py -m 5 -T 5 -I -r reports/zapreport.html -t "http://${CI_JOB_NAME}-${CI_PIPELINE_ID}:3000"
 
 after_script:
-  - docker stop ${CI_JOB_NAME}-${CI_PIPELINE_ID}
-  - mv *-results.txt reports/
-
-    
+  - find . -type f -name '*-results.txt' -exec mv {} reports/ \;
